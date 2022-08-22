@@ -23,3 +23,9 @@ jobs:
       run: |
         chmod -R 777 run.sh
         ./run.sh
+    
+    - name: Run Integration test
+      working-directory: ./build/storage/tests/it
+      run: |
+        chmod -R 777 run.sh
+        ./run.sh 
