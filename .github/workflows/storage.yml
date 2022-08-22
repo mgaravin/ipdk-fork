@@ -22,4 +22,5 @@ jobs:
       working-directory: ./build/storage/tests/it
       run: |
         chmod -R 777 run.sh
+        sudo modprobe kvm-intel
         ./run.sh 
