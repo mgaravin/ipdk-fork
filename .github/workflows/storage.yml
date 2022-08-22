@@ -11,19 +11,13 @@ on:
 
 jobs:
   docker:
-    timeout-minutes: 15
+    timeout-minutes: 45
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout
       uses: actions/checkout@v1
 
-    - name: Run UT
-      working-directory: ./build/storage/tests/ut
-      run: |
-        chmod -R 777 run.sh
-        ./run.sh
-    
     - name: Run Integration test
       working-directory: ./build/storage/tests/it
       run: |
