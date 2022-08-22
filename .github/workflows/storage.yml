@@ -19,7 +19,7 @@ jobs:
       uses: actions/checkout@v1
 
     - name: Run UT
-      working-directory: storage_pipe_test/build/storage/tests/ut
+      working-directory: ./build/storage/tests/ut
       run: |
         chmod -R 777 run.sh
         ./run.sh
