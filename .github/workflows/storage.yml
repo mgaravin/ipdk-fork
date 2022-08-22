@@ -21,6 +21,8 @@ jobs:
     - name: Run Integration test
       working-directory: ./build/storage/tests/it
       run: |
+        lscpu | grep -i virtualization
+        lsmod | grep -i kvm
         chmod -R 777 run.sh
         sudo modprobe kvm-intel
         ./run.sh 
