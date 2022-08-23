@@ -1,0 +1,23 @@
+name: Storage Unit and Integration test
+on:
+  push:
+    branches:
+    - main
+    - storage_github_action
+  pull_request:
+    branches:
+    - main
+jobs:
+  integration-test:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v3
+      - name: Restart Docker daemon
+        run: sudo systemctl restart docker   
+      - name: 'Run Storage Integration Tests'
+        working-directory: ./build/storage/tests/it
+        run: |
+          chmod -R 777 run.sh
+          ./run.sh    
