@@ -61,6 +61,6 @@ jobs:
       - name: docker tag and push to registry
         run: |
            # docker tag ${{ matrix.image }}:latest ghcr.io/${{ github.repository_owner }}/storage/${{ matrix.image }}:${{ github.sha }}
-           docker tag ${{ matrix.image }}:latest ${{ steps.image_meta.outputs.tags }}
+           docker tag ${{ matrix.image }}:latest ${{ steps.image_meta.outputs.tags.sha }}
            docker images
-           docker push ${{ steps.image_meta.outputs.tags }}
+           docker push ${{ steps.image_meta.outputs.tags.sha }}
