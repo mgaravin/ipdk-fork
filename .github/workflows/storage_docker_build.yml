@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         runner: [ubuntu-latest]
-        image: [storage-target, ipu-storage-container, host-target, cmd-sender]
+        image: [storage-target, ipu-storage-container]
 
     steps:
       - name: 'Checkout'
