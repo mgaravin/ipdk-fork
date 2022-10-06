@@ -1,0 +1,27 @@
+name: Storage Container Build
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+      - storage_github_action
+
+jobs:
+  docker:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v3
+      
+      - name: docker build
+        working-directory: ./build/storage/scripts
+        run: |
+          ./build_container.sh storage-target
+          ./build_container.sh ipu-storage-container
+          ./build_container.sh host-target
+          ./build_container.sh traffic-generator
