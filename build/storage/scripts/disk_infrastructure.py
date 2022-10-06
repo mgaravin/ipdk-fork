@@ -1,6 +1,12 @@
+#!/usr/bin/env python
+#
+# Copyright (C) 2022 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
 import base64
 import importlib
 import logging
+import os
 import re
 import socket
 import sys
@@ -17,12 +23,25 @@ logging.root.setLevel(logging.CRITICAL)
 
 
 def get_number_of_virtio_blk(sock: str) -> int:
-    cmd = 'lsblk --output "NAME"'
+    return _get_number_of_devices(sock, "vd[a-z]+\\b")
+
+
+def get_number_of_nvme_devices(sock: str) -> int:
+    return _get_number_of_devices(sock, "nvme[0-9]+\\b")
+
+
+def get_number_of_nvme_namespaces(sock: str) -> int:
+    return _get_number_of_devices(sock, "nvme[0-9]+n[0-9]+\\b")
+
+
+def _get_number_of_devices(sock: str, device_regex_filter: str) -> int:
+    cmd = "ls -1 /dev"
     out = socket_functions.send_command_over_unix_socket(
         sock=sock, cmd=cmd, wait_for_secs=1
     )
-    number_of_virtio_blk_devices = len(re.findall("vd", out))
-    return number_of_virtio_blk_devices
+    logging.info(out)
+    number_of_devices = len(re.findall(device_regex_filter, out))
+    return number_of_devices
 
 
 def is_virtio_blk_attached(sock: str) -> bool:
@@ -33,10 +52,9 @@ def is_virtio_blk_attached(sock: str) -> bool:
     return True
 
 
-def verify_expected_number_of_virtio_blk_devices(
-    vm_serial: str, expected_number_of_devices: int
+def _verify_expected_number_of_devices(
+    expected_number_of_devices: int, number_of_devices: int
 ) -> bool:
-    number_of_devices = get_number_of_virtio_blk(vm_serial)
     if number_of_devices != expected_number_of_devices:
         logging.error(
             f"Required number of devices '{expected_number_of_devices}' does "
@@ -46,6 +64,33 @@ def verify_expected_number_of_virtio_blk_devices(
     else:
         logging.info(f"Number of attached virtio-blk devices is '{number_of_devices}'")
         return True
+
+
+def verify_expected_number_of_virtio_blk_devices(
+    vm_serial: str, expected_number_of_devices: int
+) -> bool:
+    number_of_devices = get_number_of_virtio_blk(vm_serial)
+    return _verify_expected_number_of_devices(
+        expected_number_of_devices, number_of_devices
+    )
+
+
+def verify_expected_number_of_nvme_devices(
+    vm_serial: str, expected_number_of_devices: int
+) -> bool:
+    number_of_devices = get_number_of_nvme_devices(vm_serial)
+    return _verify_expected_number_of_devices(
+        expected_number_of_devices, number_of_devices
+    )
+
+
+def verify_expected_number_of_nvme_namespaces(
+    vm_serial: str, expected_number_of_namespaces: int
+) -> bool:
+    number_of_devices = get_number_of_nvme_namespaces(vm_serial)
+    return _verify_expected_number_of_devices(
+        expected_number_of_namespaces, number_of_devices
+    )
 
 
 def create_and_expose_subsystem_over_tcp(
@@ -158,7 +203,7 @@ def create_virtio_blk_without_disk_check(
     return device_handle
 
 
-def delete_virtio_blk(
+def delete_sma_device(
     ipu_storage_container_ip: str, device_handle: str, sma_port: int
 ) -> bool:
     request = {"method": "DeleteDevice", "params": {"handle": device_handle}}
@@ -171,6 +216,10 @@ def delete_virtio_blk(
 
 
 def wait_for_virtio_blk_in_os(timeout: float = 2.0) -> None:
+    wait_for_volume_in_os(timeout)
+
+
+def wait_for_volume_in_os(timeout: float = 2.0) -> None:
     time.sleep(timeout)
 
 
@@ -178,6 +227,78 @@ def create_virtio_blk(*args, **kwargs) -> str:
     disk_handle = create_virtio_blk_without_disk_check(*args, **kwargs)
     wait_for_virtio_blk_in_os()
     return disk_handle
+
+
+def create_nvme_device(
+    ipu_storage_container_ip: str,
+    sma_port: int,
+    physical_id: str,
+    virtual_id: str,
+) -> str:
+    request = {
+        "method": "CreateDevice",
+        "params": {
+            "nvme": {"physical_id": physical_id, "virtual_id": virtual_id},
+        },
+    }
+    response = send_sma_request(
+        request=request,
+        addr=ipu_storage_container_ip,
+        port=sma_port,
+    )
+    device_handle = response["handle"]
+    if device_handle:
+        # At this moment qemu produces errors for a couple of seconds and
+        # it cannot handle other operations properly until all of them are
+        # printed.
+        time.sleep(2)
+        return device_handle
+    else:
+        return ""
+
+
+def attach_volume(
+    ipu_storage_container_ip: str,
+    sma_port: int,
+    device_handle: str,
+    volume_id: str,
+    nqn: str,
+    traddr: str,
+    trsvcid: str,
+) -> None:
+    request = {
+        "method": "AttachVolume",
+        "params": {
+            "device_handle": device_handle,
+            "volume": {
+                "volume_id": uuid2base64(volume_id),
+                "nvmf": {
+                    "hostnqn": nqn,
+                    "discovery": {
+                        "discovery_endpoints": [
+                            {"trtype": "tcp", "traddr": traddr, "trsvcid": trsvcid}
+                        ]
+                    },
+                },
+            },
+        },
+    }
+    send_sma_request(request=request, addr=ipu_storage_container_ip, port=sma_port)
+    wait_for_volume_in_os()
+
+
+def detach_volume(
+    ipu_storage_container_ip: str, sma_port: int, device_handle: str, volume_id: str
+) -> None:
+    request = {
+        "method": "DetachVolume",
+        "params": {"device_handle": device_handle, "volume_id": uuid2base64(volume_id)},
+    }
+    send_sma_request(
+        request=request,
+        addr=ipu_storage_container_ip,
+        port=sma_port,
+    )
 
 
 def is_port_open(ip_addr: str, port: int, timeout: float = 1.0) -> int:
@@ -198,8 +319,31 @@ def send_rpc_request(request, addr: str, port: int, timeout: float = 60.0):
 
 def send_sma_request(request, addr: str, port: int):
     client = sma_client.Client(addr, port)
-    return send_request(client, request)
+    with SuppressProxyEnvVariables():
+        return send_request(client, request)
 
 
 def send_requests(requests, function, *args, **kwargs):
     return [function(request, *args, **kwargs) for request in requests]
+
+
+class SuppressProxyEnvVariables:
+    def __init__(self) -> None:
+        self._proxy_env_var_names = {
+            "NO_PROXY",
+            "no_proxy",
+            "HTTP_PROXY",
+            "http_proxy",
+            "HTTPS_PROXY",
+            "https_proxy",
+        }
+        self._saved_env_vars = dict()
+
+    def __enter__(self):
+        for proxy_env_var_name in self._proxy_env_var_names:
+            value_to_save = os.environ.pop(proxy_env_var_name, None)
+            if value_to_save is not None:
+                self._saved_env_vars[proxy_env_var_name] = value_to_save
+
+    def __exit__(self, *args, **kwargs):
+        os.environ.update(self._saved_env_vars)
