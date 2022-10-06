@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         runner: [ubuntu-latest]
-        image: [storage-target, ipu-storage-container]
+        image: [host-target, cmd-sender]
 
     steps:
       - name: 'Checkout'
@@ -36,7 +36,28 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create tags and labels
+        id: image_meta
+        uses: docker/metadata-action@v4
+        with:
+          sep-tags: ","
+          sep-labels: ","
+          # list of names to use as base name for tags
+          # add for dockerhub: ipdk-io/ipdk-${{ matrix.image }}-${{ steps.system.outputs.arch }}
+          images: |
+            ghcr.io/${{ github.repository_owner }}/storage-${{ matrix.image }}
+            # Docker tags based on the following events/attributes
+          tags: |
+            type=schedule
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha
+      - name: docker image list
+        run: docker images 
       - name: docker tag and push to registry
         run: |
-           docker tag ${{ matrix.image }}:latest ghcr.io/${{ github.repository_owner }}/storage/${{ matrix.image }}:${{ github.sha }}
-           docker push ghcr.io/${{ github.repository_owner }}/storage/${{ matrix.image }}:${{ github.sha }}
+           # docker tag ${{ matrix.image }}:latest ghcr.io/${{ github.repository_owner }}/storage/${{ matrix.image }}:${{ github.sha }}
+           docker push ghcr.io/${{ github.repository_owner }}/storage-${{ matrix.image }}
