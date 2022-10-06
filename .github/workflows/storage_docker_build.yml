@@ -24,4 +24,6 @@ jobs:
           ./build_container.sh storage-target
           ./build_container.sh ipu-storage-container
           ./build_container.sh host-target
-          ./build_container.sh traffic-generator
+          
+      - name: list docker images
+        run: docker images
