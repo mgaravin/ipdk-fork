@@ -12,7 +12,11 @@ on:
 jobs:
   docker:
     timeout-minutes: 30
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: [ubuntu-latest]
+        image: [storage-target, ipu-storage-container, host-target, cmd-sender]
 
     steps:
       - name: 'Checkout'
@@ -21,9 +25,7 @@ jobs:
       - name: docker build
         working-directory: ./build/storage/scripts
         run: |
-          ./build_container.sh storage-target
-          ./build_container.sh ipu-storage-container
-          ./build_container.sh host-target
+          ./build_container.sh ${{ matrix.image }}
           
       - name: list docker images
         run: docker images
