@@ -29,3 +29,14 @@ jobs:
           
       - name: list docker images
         run: docker images
+        
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2 
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: docker tag and push to registry
+        run: |
+           docker tag ${{ matrix.image }}:latest ghcr.io/${{ github.repository_owner }}/storage/${{ matrix.image }}:${{ github.sha }}
+           docker push ghcr.io/${{ github.repository_owner }}/storage/${{ matrix.image }}:${{ github.sha }}
