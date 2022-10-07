@@ -24,8 +24,6 @@ jobs:
         
       - id: commit
         uses: pr-mpt/actions-commit-hash@v1
-        with:
-          commit: "${{ github.event.workflow_run.head_sha }}"
       
       - name: docker build
         working-directory: ./build/storage/scripts
