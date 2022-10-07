@@ -26,7 +26,6 @@ jobs:
         uses: pr-mpt/actions-commit-hash@v1
         with:
           commit: "${{ github.event.workflow_run.head_sha }}"
-          prefix: "sha-"
       
       - name: docker build
         working-directory: ./build/storage/scripts
@@ -48,5 +47,5 @@ jobs:
         
       - name: docker tag and push to registry
         run: |
-           docker tag ${{ matrix.image }}:latest ghcr.io/${{ github.repository_owner }}/storage/${{ matrix.image }}:${{ github.event.workflow_run.head_sha }} ghcr.io/${{ github.repository_owner }}/storage/${{ matrix.image }}:main
+           docker tag ${{ matrix.image }}:latest ghcr.io/${{ github.repository_owner }}/storage/${{ matrix.image }}:${{ steps.commit.outputs.short }} ghcr.io/${{ github.repository_owner }}/storage/${{ matrix.image }}:main
            docker images
