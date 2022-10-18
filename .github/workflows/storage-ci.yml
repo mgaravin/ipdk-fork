@@ -48,9 +48,6 @@ jobs:
     steps:
       - name: 'Checkout'
         uses: actions/checkout@v3
-        
-      - id: commit
-        uses: pr-mpt/actions-commit-hash@v1
       
       - name: docker build
         working-directory: ./build/storage/scripts
@@ -62,8 +59,7 @@ jobs:
 
       - name: docker tag images
         run: |
-           docker tag ${{ matrix.image }}:latest ghcr.io/${{ github.repository_owner }}/storage/${{ matrix.image }}:sha-${{ steps.commit.outputs.short }} 
-           docker tag ${{ matrix.image }}:latest ghcr.io/${{ github.repository_owner }}/storage/${{ matrix.image }}:main
+           docker tag ${{ matrix.image }}:latest ghcr.io/${{ github.repository_owner }}/storage/${{ matrix.image }}-kvm-x86_64:sha-${GITHUB_SHA::7} 
            docker images
            
       - name: Login to GitHub Container Registry
@@ -77,6 +73,7 @@ jobs:
       - name: docker push to registry
         if: github.event_name == 'push'
         run: |
-           docker push ghcr.io/${{ github.repository_owner }}/storage/${{ matrix.image }}:sha-${{ steps.commit.outputs.short }} 
-           docker push ghcr.io/${{ github.repository_owner }}/storage/${{ matrix.image }}:main
+           docker tag ${{ matrix.image }}:latest ghcr.io/${{ github.repository_owner }}/storage/${{ matrix.image }}-kvm-x86_64:${GITHUB_REF##*/} 
+           docker push ghcr.io/${{ github.repository_owner }}/storage/${{ matrix.image }}-kvm-x86_64:sha-${GITHUB_SHA::7} 
+           docker push ghcr.io/${{ github.repository_owner }}/storage/${{ matrix.image }}-kvm-x86_64:${GITHUB_REF##*/}
     
