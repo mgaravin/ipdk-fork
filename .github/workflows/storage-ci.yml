@@ -60,7 +60,6 @@ jobs:
       - name: docker tag images
         run: |
            docker tag ${{ matrix.image }}:latest ghcr.io/${{ github.repository_owner }}/storage/${{ matrix.image }}-kvm-x86_64:sha-${GITHUB_SHA::7} 
-           docker tag ${{ matrix.image }}:latest ghcr.io/${{ github.repository_owner }}/storage/${{ matrix.image }}-kvm-x86_64:${GITHUB_REF##*/}
            docker images
            
       - name: Login to GitHub Container Registry
@@ -74,6 +73,7 @@ jobs:
       - name: docker push to registry
         if: github.event_name == 'push'
         run: |
+           docker tag ${{ matrix.image }}:latest ghcr.io/${{ github.repository_owner }}/storage/${{ matrix.image }}-kvm-x86_64:${GITHUB_REF##*/} 
            docker push ghcr.io/${{ github.repository_owner }}/storage/${{ matrix.image }}-kvm-x86_64:sha-${GITHUB_SHA::7} 
            docker push ghcr.io/${{ github.repository_owner }}/storage/${{ matrix.image }}-kvm-x86_64:${GITHUB_REF##*/}
     
