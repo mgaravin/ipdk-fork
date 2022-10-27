@@ -41,4 +41,4 @@ jobs:
           options: "--check --verbose"
           src: "./host-target/"
           version: "22.10.0"
-          fail_on_error: true
+          jupyter: true
