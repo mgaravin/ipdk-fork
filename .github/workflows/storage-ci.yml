@@ -42,12 +42,18 @@ jobs:
           src: "./host-target/"
           version: "22.10.0"
           jupyter: true
-      - uses: mdegis/bandit-action@v1.0
-        with: 
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          path: "./host-target/"
-          level: high
-          confidence: high
-          exit_zero: true
+          
+  bandit_test:
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    steps:
+      
+    - name: 'Checkout'
+      uses: actions/checkout@v3
         
-        
+    - name: Run bandit
+      uses: tj-actions/bandit@v5.1
+      with:
+        targets: |  # or a single string "." 
+          ./build/storage/core/host-target/
+        options: "-r"
