@@ -23,7 +23,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  run_storage_ut:
+  py_black_test:
     timeout-minutes: 15
     runs-on: ubuntu-latest
 
@@ -43,7 +43,7 @@ jobs:
           version: "22.10.0"
           jupyter: true
           
-  bandit_test:
+  py_bandit_test:
     timeout-minutes: 15
     runs-on: ubuntu-latest
     steps:
