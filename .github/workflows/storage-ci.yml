@@ -42,18 +42,12 @@ jobs:
           src: "./host-target/"
           version: "22.10.0"
           jupyter: true
-      - name: Security check - Bandit
-        uses: ./
-        with:
-          python_version: 3.9.9
-          project_path: ./host-target/
-          ignore_failure: true
-
-      - name: Security check report artifacts
-        uses: actions/upload-artifact@v1
-        # if: failure()
-        with:
-          name: Security report
-          path: output/security_report.txt
+      - uses: mdegis/bandit-action@v1
+        with: 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          path: "./host-target/"
+          level: high
+          confidence: high
+          exit_zero: true
         
         
