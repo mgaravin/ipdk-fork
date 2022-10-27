@@ -30,8 +30,15 @@ jobs:
     steps:
       - name: 'Checkout'
         uses: actions/checkout@v3
+      - name: Copy host target files
+        working-directory: ./build/storage/core
+        run: |
+          cp -r host-target ../../../
+        
       - name: black test
-        uses: rickstaa/action-black@v1
+        uses: psf/black@stable
         with:
-          black_args: "build/storage/core/host-target/ --check --verbose"
+          options: "--check --verbose"
+          src: "./host-target/"
+          version: "22.10.0"
           fail_on_error: true
