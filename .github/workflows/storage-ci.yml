@@ -33,6 +33,6 @@ jobs:
       - name: black test
         uses: psf/black@stable
         with:
-          options: "--check --verbose"
+          options: "--verbose"
           src: "./build/storage/core/host-target"
-          version: "~= 22.10"
+          version: "22.10.0"
