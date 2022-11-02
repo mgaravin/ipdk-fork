@@ -42,6 +42,7 @@ jobs:
           src: "./host-target/"
           version: "22.10.0"
           jupyter: true
+
           
   py_bandit_test:
     timeout-minutes: 15
@@ -57,3 +58,12 @@ jobs:
         targets: |  # or a single string "." 
           ./build/storage/core/host-target/
         options: "-r"
+        
+  bandit_test:
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    needs: [py_bandit_test, py_black_test]
+    steps:      
+    - name: 'Checkout'
+      uses: actions/checkout@v3
+      
