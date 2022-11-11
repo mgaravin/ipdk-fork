@@ -15,7 +15,9 @@ def run_fio(fio_args: FioArgs):
     try:
         with fio_args.create_config_file() as config:
             fio_cmd = ["fio", config.file_name]
-            result = subprocess.run(fio_cmd, capture_output=True, text=True)
+            result = subprocess.run(
+                fio_cmd, capture_output=True, text=True, shell=False
+            )    
             if result.returncode != 0:
                 raise FioExecutionError(
                     "fio execution error: '"
