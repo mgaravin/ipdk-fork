@@ -31,15 +31,17 @@ jobs:
       - name: 'Checkout'
         uses: actions/checkout@v3
       - name: Copy host target files
-        working-directory: ./build/storage/core
+        working-directory: ./build/storage/
         run: |
-          cp -r host-target ../../../
+          mkdir -p ${{ github.workspace }}/py
+          cp -r core/host-target ../../py
+          cp -r tests ../../py
         
       - name: black test
         uses: psf/black@stable
         with:
           options: "--check --verbose"
-          src: "./host-target/"
+          src: "./py/"
           version: "22.10.0"
           jupyter: true
 
