@@ -25,7 +25,6 @@ settings accordingly.
 ```
 $ git clone https://github.com/ipdk-io/ipdk.git
 ```
-
 ### Bringup either Vagrant native or Vagrant container VM:
 
 #### Vagrant Native
